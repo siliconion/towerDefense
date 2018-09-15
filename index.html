@@ -3,16 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title> DivHack TD </title>
+    <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="theme.css">
 </head>
 
 <body>
-Div Hack 2018 Tower Defense!
-<div id='game'></div>
-<div id='score'> score: 100</div>
-<div id='build_area'>
-    <button onclick="build_tower"> build tower </button>
-</div>
+    <div id="base">
+        <header class="justify-center">
+            <h1>TOWER DEFENSE</h1>
+        </header>
+        <div class="board">
+            <div class="game-container justify-center">
+                <div id='game'></div>
+            </div>
+            <div id='stats'>
+                <h3 class="justify-center">STATZ BAR</h3>
+            </div>
+        </div>    
+        <div id="build_area" class="justify-center">
+            <button onClick="build_tower"> build tower </button>
+        </div>
+    </div>
 </body>
-<script src="index.js"></script>
+    <script src="index.js"></script>
 </html>
