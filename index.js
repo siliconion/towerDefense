@@ -1,10 +1,18 @@
-// initial values
-mob_init_hp = 100;
-mob_init_position_x = 0;
-mob_init_position_y = 0;
-mob_size = 10;
-start_gold = 100;
-start_hp = 1000;
+// initial constants
+const canvas_width = 500
+const grid_number = 10
+const grid_width = canvas_width / grid_number
+
+const mob_init_hp = 100
+const mob_init_position_x = 0
+const mob_init_position_y = 0
+const mob_size = 10
+const mob_speed = 20
+
+const start_gold = 100
+const start_hp = 1000
+const tower_damage = 1
+const tower_range = 100
 
 window.onload = function() {
   // init,
@@ -14,37 +22,52 @@ const tempTowerRecord = [];
 
 var gameState;
 
+function Timer() {
+    return {
+        init_time: new Date(),
+        get_time: function () {
+            return new Date().now() - this.init_time
+        }
+    }
+}
+
 function startGame() {
-  // initialize board
-  myGameArea.start();
-  gameState = {
-    gold: start_gold,
-    hp: start_hp,
-    level: 0,
-    mobs: [],
-    timer: 0,
-    grid: Grid()
-  };
-  // grid
-  setInterval(runGame, 100);
-  addEventListeners();
+    // initialize board
+    myGameArea.start();
+    gameState = {
+        gold: start_gold,
+        hp: start_hp,
+        level: 0,
+        mobs: [],
+        timer: Timer(),
+        gird: Grid(),
+        spawnMob: true
+    }
+    setInterval(runGame, 1000)
+    setInterval(() => {
+        gameState.spawnMob = true
+    }, 3000)
 }
 
 function runGame() {
-  // increase game clock
-  // redraw
-  var mobs = [];
-  grid.draw();
-  grid.towers.forEach(t => t.draw());
-  gameState.mobs.forEach(m => m.draw());
-
-  // mobs
-  // spawn
-  spawn();
-  // take damage
-  mobs.forEach(m => m.takeDamage());
-  // move
-  mobs.forEach(m => m.move());
+    console.log("run game")
+    // increase game clock
+    // redraw
+    grid.draw()
+    grid.towers.forEach(t => t.draw())
+    gameState.mobs.forEach(m => {
+        console.log("line 57")
+        console.log(m)
+        m.draw()
+    })
+    console.log(gameState.mobs)
+    // mobs
+    // spawn
+    spawn()
+    // take damage
+    gameState.mobs.forEach(m => m.take_damage())
+    // move
+    gameState.mobs.forEach(m => m.move())
 
   // towers
   // attack?
@@ -53,7 +76,15 @@ function runGame() {
 }
 
 function spawn() {
-  // if timer is spawn_interval, add X mobs in to mobs
+    // if timer is spawn_interval, add X mobs in to mobs
+    // if timer % internal = 0 then mobs.add(10 new mobs)
+    if (gameState.spawnMob) {
+        let new_mob = new Mob()
+        gameState.mobs.push(new_mob)
+        console.log("creating new mob")
+        console.log(new_mob)
+        gameState.spawnMob = false
+    }
 }
 
 var myGameArea = {
@@ -95,39 +126,57 @@ function Grid() {
 }
 
 function Mob() {
-  return {
-    hp: mob_init_hp,
-    speed: mob_speed,
-    location_x: mob_init_position_x,
-    location_y: mob_init_position_y,
-    move: function(delta_x, delta_y) {
-      this.location_x += delta_x;
-      this.location_y += delta_y;
-    },
-    targeted_damage: 0,
-    take_damage: function() {
-      this.hp -= this.targeted_damage; // ?????
-    },
-    draw: function() {
-      myGameArea.context.beginPath();
-      myGameArea.context.arc(location_x, location_y, mob_size, 0, 2 * Math.PI);
-      myGameArea.context.stroke();
+    return {
+        hp: mob_init_hp,
+        speed: 5,
+        location_x: 123,
+        location_y: 432,
+        move: function(delta_x, delta_y) {
+            this.location_x += this.speed
+            this.location_y += 0
+            // check if reaches the edge
+        },
+        targeted_damage: 0,
+        take_damage: function() {
+            this.hp -= this.targeted_damage // ?????
+        },
+        draw: function() {
+            console.log(this)
+            console.log("draw at ", this.location_x, this.location_y)
+            myGameArea.context.beginPath();
+            myGameArea.context.arc(this.location_x, this.location_y, 100, 0, 2 * Math.PI);
+            myGameArea.context.stroke();
+        }
     }
   };
-}
 
 function Tower(x, y) {
-  return {
-    x: x,
-    y: y,
-    damage: tower_damage,
-    range: tower_range,
-    target: function() {
-      // find the mob
-      // add possible damage to the mob
+    return {
+        x: x,
+        y: y,
+        damage: tower_damage,
+        range: tower_range,
+        target: function () {
+            // find the mob
+            let in_range_mobs = gameState.mobs.filter(m => {
+                return (m.x <= this.x + this.range) & (m.x >= this.x - this.range) & (m.y <= this.y + this.range) & (m.y >= this.y - this.range)
+            }).sort(function (a, b) {
+                // find the one closest to the end
+                return (a.x - b.x)
+            })
+            if (in_range_mobs.length > 0) {
+                let targeted_mob = in_range_mobs[0]
+                targeted_mob.take_damage(this.damage)
+                if (targeted_mob.hp <= 0) {
+                    // remove mob
+                    let targeted_mob_index = gameState.findIndex(targeted_mob)
+                    gameState.mobs.splice(targeted_mob_index, 1)
+                }
+
+            }
+        }
     }
   };
-}
 
 function placeTower(e) {
   const xValue = e.offsetX;
