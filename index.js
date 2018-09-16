@@ -18,6 +18,8 @@ const tower_range = grid_width * 2;
 const tower_cooldown = 1000;
 const tower_cost = 40;
 
+
+
 //helpers
 function calculateXYPixels(x, y) {
     const xPosition = x * grid_width;
@@ -70,6 +72,7 @@ let myGameArea = {
     canvas: document.createElement("canvas"),
     gold: document.getElementById("gold"),
     hp: document.getElementById("hp"),
+    level: document.getElementById("level"),
     start: function () {
         this.canvas.width = canvas_width;
         this.canvas.height = canvas_width;
@@ -78,6 +81,11 @@ let myGameArea = {
         this.interval = setInterval(game.runGame, 1000 / 60);
         this.gold.innerText = gameState.gold;
         this.hp.innerText = gameState.hp;
+        this.level.innerText = gameState.level;
+        console.log(gameState.level)
+
+        
+        
     },
     clear: function () {
         this.context.clearRect(0, 0, canvas_width, canvas_width);
@@ -104,6 +112,9 @@ let game = {
             let new_mob = new Mob();
             gameState.mobs.push(new_mob);
             gameState.level += 1;
+            myGameArea.level.innerText = Math.floor((gameState.level)/10);
+
+
             gameState.spawnMob = false;
             console.log(gameState.level)
             var spawn_cooldown = 1500 * Math.pow(0.995, gameState.level)
