@@ -23,6 +23,11 @@ function Tower(x, y) {
                     return b.x - a.x;
                 });
         },
+        recharge: function () {
+            setTimeout(() => {
+                this.ready_to_attack = true;
+            }, this.cooldown);
+        },
         attack: function () {
             if (this.ready_to_attack) {
                 // find the mob
@@ -33,9 +38,7 @@ function Tower(x, y) {
                     laser.draw();
                     targeted_mob.hp -= this.damage;
                     this.ready_to_attack = false;
-                    setTimeout(() => {
-                        this.ready_to_attack = true;
-                    }, this.cooldown);
+                    this.recharge();
                     if (targeted_mob.hp <= 0) {
                         gameState.gold += targeted_mob.worth;
                         myGameArea.gold.innerText = gameState.gold;
