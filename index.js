@@ -3,7 +3,7 @@ const canvas_width = 500
 const grid_number = 10
 const grid_width = canvas_width / grid_number
 
-const mob_init_hp = 100
+const mob_init_hp = 10
 const mob_init_position_x = 0
 const mob_init_position_y = canvas_width / 2 - grid_width / 2
 const mob_size = 10
@@ -13,8 +13,9 @@ const mob_worth = 10
 
 const start_gold = 100
 const start_hp = 100
-const tower_damage = 1
-const tower_range = canvas_width * 3
+
+const tower_damage = 10
+const tower_range = grid_width * 3
 const tower_cooldown = 1000
 const tower_cost = 40
 
@@ -64,6 +65,8 @@ function startGame() {
         grid: Grid(),
         spawnMob: true
     }
+    myGameArea.gold.innerText = gameState.gold
+    myGameArea.hp.innerText = gameState.hp
     setInterval(runGame, 1000 / 60)
     setInterval(() => {
         gameState.spawnMob = true
@@ -71,6 +74,7 @@ function startGame() {
 }
 
 function runGame() {
+
     if(gameState.hp <= 0){
         alert("GAME OVER")
         startGame()
@@ -101,6 +105,7 @@ function spawn() {
         let new_mob = new Mob()
         gameState.mobs.push(new_mob)
         gameState.spawnMob = false
+        gameState.level += 1
     }
 }
 
@@ -123,7 +128,7 @@ function Grid() {
 
 function Mob() {
     return {
-        hp: mob_init_hp,
+        hp: mob_init_hp + 10 * gameState.level,
         speed: mob_speed,
         damage: mob_damage,
         x: mob_init_position_x,
@@ -135,7 +140,6 @@ function Mob() {
             this.x += this.speed
             this.y += 0
             if(this.x >= canvas_width) {
-                console.log("mob attack!", gameState.hp)
                 gameState.hp -= this.damage
                 myGameArea.hp.innerText = gameState.hp
                 this.reach_the_end = true
@@ -198,6 +202,7 @@ function Tower(x, y) {
                     laser = new Laser(targeted_mob, this)
                     laser.draw()
                     targeted_mob.hp -= this.damage
+                    this.ready_to_attack = false
                     laser.remove()
                     if(targeted_mob.hp <= 0){
                         gameState.gold += targeted_mob.worth
