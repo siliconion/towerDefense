@@ -1,6 +1,6 @@
 # Tower Defense
 
-Shoot down patriarchy with our rainbow laser :rainbow: :rainbow: :rainbow:
+Shoot down the patriarchy with our rainbow laser :rainbow: :rainbow: :rainbow:
 
 Built in Womwn Who Code Austin 4th Diversity Hackthon!
 * [siliconion](https://github.com/siliconion)
