@@ -5,22 +5,37 @@ const grid_width = canvas_width / grid_number
 
 const mob_init_hp = 100
 const mob_init_position_x = 0
-const mob_init_position_y = 0
+const mob_init_position_y = canvas_width / 2 - grid_width / 2
 const mob_size = 10
 const mob_speed = 20
 
 const start_gold = 100
 const start_hp = 1000
 const tower_damage = 1
-const tower_range = 100
+const tower_range = canvas_width * 3
 
-window.onload = function() {
-  // init,
-  startGame();
+
+// global variables
+let gameState;
+
+window.onload = function () {
+    addEventListeners()
+    startGame();
 };
-const tempTowerRecord = [];
 
-var gameState;
+let myGameArea = {
+    canvas: document.createElement("canvas"),
+    start: function () {
+        this.canvas.width = canvas_width;
+        this.canvas.height = canvas_width;
+        this.context = this.canvas.getContext("2d");
+        document.getElementById("game").appendChild(this.canvas);
+    },
+    clear: function () {
+        this.context.clearRect(0, 0, canvas_width, canvas_width)
+    }
+};
+
 
 function Timer() {
     return {
@@ -40,115 +55,81 @@ function startGame() {
         level: 0,
         mobs: [],
         timer: Timer(),
-        gird: Grid(),
+        grid: Grid(),
         spawnMob: true
     }
-    setInterval(runGame, 1000)
+    setInterval(runGame, 1000 / 60)
     setInterval(() => {
         gameState.spawnMob = true
     }, 3000)
 }
 
 function runGame() {
-    console.log("run game")
-    // increase game clock
-    // redraw
+    // remove dead mobs
+    gameState.mobs = gameState.mobs.filter(m => m.hp > 0)
+
+    // Redraw
+    myGameArea.clear()
     grid.draw()
     grid.towers.forEach(t => t.draw())
     gameState.mobs.forEach(m => {
-        console.log("line 57")
-        console.log(m)
         m.draw()
     })
-    console.log(gameState.mobs)
-    // mobs
-    // spawn
-    spawn()
-    // take damage
-    gameState.mobs.forEach(m => m.take_damage())
-    // move
+    // mob move
     gameState.mobs.forEach(m => m.move())
+    // new mob spawn
+    spawn()
 
-  // towers
-  // attack?
-  grid.towers.forEach(t => t.target());
-  // build
+    // towers
+    grid.towers.forEach(t => t.attack());
+    // build
 }
 
 function spawn() {
-    // if timer is spawn_interval, add X mobs in to mobs
-    // if timer % internal = 0 then mobs.add(10 new mobs)
+    // if spawnMob is true, make new mobs.
     if (gameState.spawnMob) {
         let new_mob = new Mob()
         gameState.mobs.push(new_mob)
-        console.log("creating new mob")
-        console.log(new_mob)
         gameState.spawnMob = false
     }
 }
 
-var myGameArea = {
-  canvas: document.createElement("canvas"),
-  start: function() {
-    this.canvas.width = 500;
-    this.canvas.height = 500;
-    this.context = this.canvas.getContext("2d");
-    document.getElementById("game").appendChild(this.canvas);
-  }
-};
-
 function Grid() {
-  return (grid = {
-    num_x: 10,
-    num_y: 10,
-    draw: function() {
-      dist_x = myGameArea.canvas.width / this.num_x;
-      dist_y = myGameArea.canvas.height / this.num_y;
-      for (let i = 1; i < this.num_x; i++) {
-        myGameArea.context.moveTo(0, i * dist_x);
-        myGameArea.context.lineTo(myGameArea.canvas.width, i * dist_x);
-        myGameArea.context.stroke();
-      }
-      for (let i = 1; i < this.num_y; i++) {
-        myGameArea.context.moveTo(i * dist_y, 0);
-        myGameArea.context.lineTo(i * dist_y, myGameArea.canvas.height);
-        myGameArea.context.stroke();
-      }
-    },
-    towers: [],
-    build_tower: function(x, y) {
-      // check if it's a valid location
-      // if so build the tower
-      const canvas = document.getElementsByTagName("canvas");
-      canvas.style.backgroundColor = "blue";
-    }
-  });
+    return (grid = {
+        draw: function () {
+            for (let i = 1; i < grid_number; i++) {
+                myGameArea.context.moveTo(0, i * grid_width);
+                myGameArea.context.lineTo(canvas_width, i * grid_width);
+                myGameArea.context.stroke();
+                myGameArea.context.moveTo(i * grid_width, 0);
+                myGameArea.context.lineTo(i * grid_width, canvas_width);
+                myGameArea.context.stroke();
+            }
+        },
+        towers: [],
+        tower_lookup: []
+    });
 }
 
 function Mob() {
     return {
         hp: mob_init_hp,
-        speed: 5,
-        location_x: 123,
-        location_y: 432,
-        move: function(delta_x, delta_y) {
-            this.location_x += this.speed
-            this.location_y += 0
-            // check if reaches the edge
+        speed: mob_speed,
+        x: mob_init_position_x,
+        y: mob_init_position_y,
+        size: mob_size,
+        move: function (delta_x, delta_y) {
+            this.x += this.speed
+            this.y += 0
         },
-        targeted_damage: 0,
-        take_damage: function() {
-            this.hp -= this.targeted_damage // ?????
-        },
-        draw: function() {
-            console.log(this)
-            console.log("draw at ", this.location_x, this.location_y)
+        draw: function () {
             myGameArea.context.beginPath();
-            myGameArea.context.arc(this.location_x, this.location_y, 100, 0, 2 * Math.PI);
+            myGameArea.context.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
             myGameArea.context.stroke();
+            myGameArea.context.fill();
         }
     }
-  };
+};
 
 function Tower(x, y) {
     return {
@@ -156,41 +137,59 @@ function Tower(x, y) {
         y: y,
         damage: tower_damage,
         range: tower_range,
-        target: function () {
-            // find the mob
-            let in_range_mobs = gameState.mobs.filter(m => {
-                return (m.x <= this.x + this.range) & (m.x >= this.x - this.range) & (m.y <= this.y + this.range) & (m.y >= this.y - this.range)
-            }).sort(function (a, b) {
+        cooldown: tower_cooldown,
+        ready_to_attack: true,
+        check_mob_in_range: function (m) {
+            return (m.x <= this.x + this.range) & (m.x >= this.x - this.range) & (m.y <= this.y + this.range) & (m.y >= this.y - this.range)
+        },
+        get_in_range_mobs: function () {
+            return gameState.mobs.filter(m => this.check_mob_in_range(m)
+            ).sort(function (a, b) {
                 // find the one closest to the end
                 return (a.x - b.x)
             })
-            if (in_range_mobs.length > 0) {
-                let targeted_mob = in_range_mobs[0]
-                targeted_mob.take_damage(this.damage)
-                if (targeted_mob.hp <= 0) {
-                    // remove mob
-                    let targeted_mob_index = gameState.findIndex(targeted_mob)
-                    gameState.mobs.splice(targeted_mob_index, 1)
-                }
 
+        },
+        attack: function () {
+            if (ready_to_attack) {
+                // find the mob
+                let in_range_mobs = this.get_in_range_mobs()
+                if (in_range_mobs.length > 0) {
+                    let targeted_mob = in_range_mobs[0]
+                    targeted_mob.hp -= this.damage
+                    setInterval(()=> {this.ready_to_attack = true}, this.cooldown)
+                }
             }
+        },
+        draw: function () {
+            myGameArea.context.beginPath();
+            myGameArea.context.moveTo(this.x + grid_width / 4, this.y - grid_width * 2 / 5);
+            myGameArea.context.lineTo(this.x - grid_width / 4, this.y - grid_width * 2 / 5);
+            myGameArea.context.lineTo(this.x - grid_width * 2 / 5, this.y + grid_width * 2 / 5);
+            myGameArea.context.lineTo(this.x + grid_width * 2 / 5, this.y + grid_width * 2 / 5);
+            myGameArea.context.fill();
         }
     }
-  };
+}
+;
 
 function placeTower(e) {
-  const xValue = e.offsetX;
-  const yValue = e.offsetY;
-  const x = Math.floor(xValue / 50);
-  const y = Math.floor(yValue / 50);
-  const uniqueXY = `${x}${y}`;
-  !tempTowerRecord.includes(uniqueXY) ? tempTowerRecord.push(uniqueXY) : null;
+    const xValue = e.offsetX;
+    const yValue = e.offsetY;
+    const x = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
+    const y = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
+    const uniqueXY = `${x}${y}`;
+    !gameState.grid.tower_lookup.includes(uniqueXY) ? gameState.grid.tower_lookup.push(uniqueXY) : null;
+    console.log("building tower at", x, y)
+    gameState.grid.towers.push(new Tower(x, y))
 }
 
 function addEventListeners() {
-  document.getElementById("build-tower-button").onclick = e => {
-    const canvas = this.myGameArea.canvas;
-    canvas.style.backgroundColor = "blue";
-    canvas.addEventListener("click", placeTower);
-  };
+    document.getElementById("build-tower-button").onclick = e => {
+        const canvas = myGameArea.canvas;
+        // canvas.style.backgroundColor = "grey";
+        console.log(gameState);
+        console.log(gameState.gi);
+        canvas.addEventListener("click", placeTower);
+    };
 }
