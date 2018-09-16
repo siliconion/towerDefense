@@ -57,7 +57,7 @@ h3 {
     background: #DCE4EC;
 }
 
-/*  
+/*
    BUILD AREA
 */
 #build_area {
@@ -84,4 +84,10 @@ button {
 button:hover {
     background-color: #EBE614;
     color: #EE2530;
+}
+
+button:disabled {
+    background-color: #a9a9a9;
+    color: #d3d3d3;
+    cursor: auto;
 }
