@@ -7,12 +7,15 @@ const mob_init_hp = 100
 const mob_init_position_x = 0
 const mob_init_position_y = canvas_width / 2 - grid_width / 2
 const mob_size = 10
-const mob_speed = 20
+const mob_speed = 1
+const mob_damage = 20
+const mob_worth = 10
 
 const start_gold = 100
-const start_hp = 1000
+const start_hp = 100
 const tower_damage = 1
 const tower_range = canvas_width * 3
+const tower_cooldown = 1000
 
 
 // global variables
@@ -65,8 +68,12 @@ function startGame() {
 }
 
 function runGame() {
+    if(gameState.hp <= 0){
+        alert("GAME OVER")
+        startGame()
+    }
     // remove dead mobs
-    gameState.mobs = gameState.mobs.filter(m => m.hp > 0)
+    gameState.mobs = gameState.mobs.filter(m => m.hp > 0).filter(m => !m.reach_the_end)
 
     // Redraw
     myGameArea.clear()
@@ -115,12 +122,20 @@ function Mob() {
     return {
         hp: mob_init_hp,
         speed: mob_speed,
+        damage: mob_damage,
         x: mob_init_position_x,
         y: mob_init_position_y,
         size: mob_size,
+        worth: mob_worth,
+        reach_the_end: false,
         move: function (delta_x, delta_y) {
             this.x += this.speed
             this.y += 0
+            if(this.x >= canvas_width) {
+                console.log("mob attack!", gameState.hp)
+                gameState.hp -= this.damage
+                this.reach_the_end = true
+            }
         },
         draw: function () {
             myGameArea.context.beginPath();
@@ -146,18 +161,23 @@ function Tower(x, y) {
             return gameState.mobs.filter(m => this.check_mob_in_range(m)
             ).sort(function (a, b) {
                 // find the one closest to the end
-                return (a.x - b.x)
+                return (b.x - a.x)
             })
 
         },
         attack: function () {
-            if (ready_to_attack) {
+            if (this.ready_to_attack) {
                 // find the mob
                 let in_range_mobs = this.get_in_range_mobs()
                 if (in_range_mobs.length > 0) {
                     let targeted_mob = in_range_mobs[0]
                     targeted_mob.hp -= this.damage
-                    setInterval(()=> {this.ready_to_attack = true}, this.cooldown)
+                    if(targeted_mob.hp <= 0){
+                        gameState.gold += targeted_mob.worth
+                    }
+                    setInterval(() => {
+                        this.ready_to_attack = true
+                    }, this.cooldown)
                 }
             }
         },
