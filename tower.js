@@ -32,7 +32,6 @@ function Tower(x, y) {
                     laser = new Laser(targeted_mob, this);
                     laser.draw();
                     targeted_mob.hp -= this.damage;
-                    // laser.remove();
                     this.ready_to_attack = false;
                     setTimeout(() => {
                         this.ready_to_attack = true;
