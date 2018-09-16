@@ -2,7 +2,7 @@
 
 Shoot down the patriarchy with our rainbow laser :rainbow: :rainbow: :rainbow:
 
-Built in Womwn Who Code Austin 4th Diversity Hackthon!
+Built at Women Who Code Austin 4th Diversity Hackthon!
 * [siliconion](https://github.com/siliconion)
 * [s3rj](https://github.com/s3rj)
 * [rachiebytes](https://github.com/rachiebytes)
