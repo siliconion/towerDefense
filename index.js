@@ -8,13 +8,13 @@ const mob_init_position_x = 0;
 const mob_init_position_y = canvas_width / 2 - grid_width / 2;
 const mob_size = 10;
 const mob_speed = 1;
-const mob_damage = 20;
-const mob_worth = 10;
+const mob_damage = 10;
+const mob_worth = 2;
 
-const start_gold = 100;
+const start_gold = 200;
 const start_hp = 100;
-const tower_damage = 40;
-const tower_range = grid_width * 3;
+const tower_damage = 100;
+const tower_range = grid_width * 2;
 const tower_cooldown = 1000;
 const tower_cost = 40;
 
@@ -52,8 +52,14 @@ function debounce(milliseconds, context) {
 }
 
 // global variables
-// let game;
-let gameState;
+let gameState = {
+    gold: start_gold,
+    hp: start_hp,
+    level: 0,
+    mobs: [],
+    grid: Grid(),
+    spawnMob: true
+};
 
 window.onload = () => {
     addEventListeners();
@@ -70,6 +76,8 @@ let myGameArea = {
         this.context = this.canvas.getContext("2d");
         document.getElementById("game").appendChild(this.canvas);
         this.interval = setInterval(game.runGame, 1000 / 60);
+        this.gold.innerText = gameState.gold;
+        this.hp.innerText = gameState.hp;
     },
     clear: function () {
         this.context.clearRect(0, 0, canvas_width, canvas_width);
@@ -79,7 +87,6 @@ let myGameArea = {
 let game = {
     start: function () {
         // initialize board
-        myGameArea.start();
         gameState = {
             gold: start_gold,
             hp: start_hp,
@@ -88,18 +95,22 @@ let game = {
             grid: Grid(),
             spawnMob: true
         };
+        myGameArea.start();
+
     },
     spawn: function () {
         // if spawnMob is true, make new mobs.
         if (gameState.spawnMob) {
             let new_mob = new Mob();
             gameState.mobs.push(new_mob);
-            gameState.spawnMob = false;
             gameState.level += 1;
+            gameState.spawnMob = false;
+            console.log(gameState.level)
+            var spawn_cooldown = 1500 * Math.pow(0.995, gameState.level)
             game.spawn_countdown =
                 setTimeout(() => {
                     gameState.spawnMob = true;
-                }, 1500)
+                }, spawn_cooldown)
         }
     },
     runGame: function () {
@@ -127,6 +138,8 @@ let game = {
 
         // towers
         grid.towers.forEach(t => t.attack());
+        // check dead mobs
+        gameState.mobs.forEach(m=>m.die())
         // build
     },
     spawn_countdown: null

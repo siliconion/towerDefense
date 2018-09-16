@@ -37,12 +37,9 @@ function Tower(x, y) {
                     laser = new Laser(targeted_mob, this);
                     laser.draw();
                     targeted_mob.hp -= this.damage;
+                    setTimeout(laser.remove, 300);
                     this.ready_to_attack = false;
                     this.recharge();
-                    if (targeted_mob.hp <= 0) {
-                        gameState.gold += targeted_mob.worth;
-                        myGameArea.gold.innerText = gameState.gold;
-                    }
                 }
             }
         },
@@ -64,8 +61,36 @@ function Tower(x, y) {
                 this.x + (grid_width * 2) / 5,
                 this.y + (grid_width * 2) / 5
             );
-            myGameArea.context.fillStyle = "blue"
+            myGameArea.context.fillStyle = "#2211ff"
             myGameArea.context.fill();
         }
     };
 }
+//
+// function rainbow() {
+//     let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'violet']
+//     return colors[Math.floor(Math.random() * 7)]
+// }
+//
+// class Laser {
+//     constructor(mob, tower) {
+//         this.mob = mob;
+//         this.tower = tower;
+//     }
+//
+//     draw() {
+//         myGameArea.context.beginPath();
+//         myGameArea.context.moveTo(this.tower.x, this.tower.y);
+//         myGameArea.context.lineTo(this.mob.x, this.mob.y);
+//         myGameArea.context.lineWidth = 5;
+//         myGameArea.context.strokeStyle= rainbow()
+//         myGameArea.context.stroke();
+//         myGameArea.context.lineWidth = 1;
+//         myGameArea.context.fill();
+//     }
+//
+//     remove() {
+//         // TODO
+//         myGameArea.context.beginPath();
+//     }
+// }

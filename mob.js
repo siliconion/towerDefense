@@ -1,13 +1,19 @@
 function Mob() {
     return {
-        hp: mob_init_hp + gameState.level * 10,
+        hp: mob_init_hp + gameState.level * 3,
         speed: mob_speed,
         damage: mob_damage,
         x: mob_init_position_x,
-        y: mob_init_position_y,
+        y: Math.random() * 500,
         size: mob_size,
         worth: mob_worth,
         reach_the_end: false,
+        die: function () {
+            if (this.hp <= 0) {
+                gameState.gold += this.worth;
+                myGameArea.gold.innerText = gameState.gold;
+            }
+        },
         move: function (delta_x, delta_y) {
             this.x += this.speed;
             this.y += 0;
