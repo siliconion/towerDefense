@@ -29,7 +29,6 @@ function calculateCoordinate(offsetX, offsetY) {
     const y = Math.floor(offsetY / grid_width);
     return {x, y};
 }
-// const debounceChangeColorOnHover = changeColorOnHover;
 const debounceChangeColorOnHover = debounce(10, changeColorOnHover);
 
 function debounce(milliseconds, context) {
@@ -53,11 +52,12 @@ function debounce(milliseconds, context) {
 }
 
 // global variables
+// let game;
 let gameState;
 
-window.onload = function () {
+window.onload = () => {
     addEventListeners();
-    startGame();
+    game.start();
 };
 
 let myGameArea = {
@@ -69,65 +69,73 @@ let myGameArea = {
         this.canvas.height = canvas_width;
         this.context = this.canvas.getContext("2d");
         document.getElementById("game").appendChild(this.canvas);
+        this.interval = setInterval(game.runGame, 1000 / 60);
     },
     clear: function () {
         this.context.clearRect(0, 0, canvas_width, canvas_width);
     }
 };
 
-function startGame() {
-    // initialize board
-    myGameArea.start();
-    gameState = {
-        gold: start_gold,
-        hp: start_hp,
-        level: 0,
-        mobs: [],
-        grid: Grid(),
-        spawnMob: true
-    };
-    setInterval(runGame, 1000 / 60);
+let game = {
+    start: function () {
+        // initialize board
+        myGameArea.start();
+        gameState = {
+            gold: start_gold,
+            hp: start_hp,
+            level: 0,
+            mobs: [],
+            grid: Grid(),
+            spawnMob: true
+        };
+    },
+    spawn: function () {
+        // if spawnMob is true, make new mobs.
+        if (gameState.spawnMob) {
+            let new_mob = new Mob();
+            gameState.mobs.push(new_mob);
+            gameState.spawnMob = false;
+            gameState.level += 1;
+            game.spawn_countdown =
+                setTimeout(() => {
+                    gameState.spawnMob = true;
+                }, 1500)
+        }
+    },
+    runGame: function () {
+        // debugger;
+        if (gameState.hp <= 0) {
+            game.stopGame()
+        }
+        // remove dead mobs
+        gameState.mobs = gameState.mobs
+            .filter(m => m.hp > 0)
+            .filter(m => !m.reach_the_end);
 
-}
+        // Redraw
+        myGameArea.clear();
+        grid.drawHoverEffect();
+        grid.draw();
+        grid.towers.forEach(t => t.draw());
+        gameState.mobs.forEach(m => {
+            m.draw();
+        });
+        // mob move
+        gameState.mobs.forEach(m => m.move());
+        // new mob spawn
+        game.spawn();
 
-function runGame() {
-    if (gameState.hp <= 0) {
+        // towers
+        grid.towers.forEach(t => t.attack());
+        // build
+    },
+    spawn_countdown: null
+    ,
+    stopGame: function () {
         alert("GAME OVER");
-        startGame();
-    }
-    // remove dead mobs
-    gameState.mobs = gameState.mobs
-        .filter(m => m.hp > 0)
-        .filter(m => !m.reach_the_end);
-
-    // Redraw
-    myGameArea.clear();
-    grid.drawHoverEffect();
-    grid.draw();
-    grid.towers.forEach(t => t.draw());
-    gameState.mobs.forEach(m => {
-        m.draw();
-    });
-    // mob move
-    gameState.mobs.forEach(m => m.move());
-    // new mob spawn
-    spawn();
-
-    // towers
-    grid.towers.forEach(t => t.attack());
-    // build
-}
-
-function spawn() {
-    // if spawnMob is true, make new mobs.
-    if (gameState.spawnMob) {
-        let new_mob = new Mob();
-        gameState.mobs.push(new_mob);
-        gameState.spawnMob = false;
-        gameState.level += 1;
-        setTimeout(() => {
-            gameState.spawnMob = true;
-        }, 2500);
+        game.start();
+        clearInterval(myGameArea.interval);
+        clearTimeout(game.spawn_countdown)
     }
 }
 
@@ -206,21 +214,12 @@ function finalizeTower() {
 
     const button = document.getElementById("build-tower-button");
     button.disabled = false;
-    // const submitButton = document.getElementById("submit-tower");
-    // submitButton.parentNode.removeChild(submitButton);
 }
 
 function addEventListeners() {
     document.getElementById("build-tower-button").addEventListener("click", e => {
         const button = e.target;
         button.disabled = true;
-        // const submitButton = document.createElement("button");
-        // submitButton.innerText = "Start Game";
-        // submitButton.id = "submit-tower";
-        // const buildArea = document
-        //   .getElementById("build_area")
-        //   .appendChild(submitButton);
-        // submitButton.addEventListener("click", finalizeTower);
         const canvas = myGameArea.canvas;
         canvas.addEventListener("mouseleave", setTimeoutResetHover);
         canvas.addEventListener("mouseover", debounceChangeColorOnHover);

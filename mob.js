@@ -22,7 +22,7 @@ function Mob() {
             myGameArea.context.beginPath();
             myGameArea.context.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
             myGameArea.context.stroke();
-            myGameArea.context.fillStyle = "red"
+            myGameArea.context.fillStyle = "#F44444"
             myGameArea.context.fill();
         }
     };
