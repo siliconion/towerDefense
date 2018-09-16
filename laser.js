@@ -19,8 +19,4 @@ class Laser {
         myGameArea.context.stroke();
         myGameArea.context.lineWidth = 1;
     }
-
-    remove() {
-        // TODO
-    }
 }
