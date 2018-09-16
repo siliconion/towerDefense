@@ -19,12 +19,45 @@ const tower_range = grid_width * 3
 const tower_cooldown = 1000
 const tower_cost = 40
 
+//helpers
+function calculateXYPixels(x, y) {
+    const xPosition = x * grid_width;
+    const yPosition = y * grid_width;
+    return {xPosition, yPosition, xPixel: grid_width, yPixel: grid_width};
+}
+function calculateCoordinate(offsetX, offsetY) {
+    const x = Math.floor(offsetX / grid_width);
+    const y = Math.floor(offsetY / grid_width);
+    return {x, y};
+}
+// const debounceChangeColorOnHover = changeColorOnHover;
+const debounceChangeColorOnHover = debounce(100, changeColorOnHover);
+
+function debounce(milliseconds, context) {
+    const originalFunction = context;
+    const wait = milliseconds;
+    let timer = null;
+    return function () {
+        const self = context || this;
+        const args = arguments;
+
+        function complete() {
+            originalFunction.apply(context, args);
+            timer = null;
+        }
+
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(complete, wait);
+    };
+}
 
 // global variables
 let gameState;
 
 window.onload = function () {
-    addEventListeners()
+    addEventListeners();
     startGame();
 };
 
@@ -74,8 +107,7 @@ function startGame() {
 }
 
 function runGame() {
-
-    if(gameState.hp <= 0){
+    if (gameState.hp <= 0) {
         alert("GAME OVER")
         startGame()
     }
@@ -83,16 +115,17 @@ function runGame() {
     gameState.mobs = gameState.mobs.filter(m => m.hp > 0).filter(m => !m.reach_the_end)
 
     // Redraw
-    myGameArea.clear()
-    grid.draw()
-    grid.towers.forEach(t => t.draw())
+    myGameArea.clear();
+    grid.drawHoverEffect();
+    grid.draw();
+    grid.towers.forEach(t => t.draw());
     gameState.mobs.forEach(m => {
-        m.draw()
-    })
+        m.draw();
+    });
     // mob move
-    gameState.mobs.forEach(m => m.move())
+    gameState.mobs.forEach(m => m.move());
     // new mob spawn
-    spawn()
+    spawn();
 
     // towers
     grid.towers.forEach(t => t.attack());
@@ -121,6 +154,16 @@ function Grid() {
                 myGameArea.context.stroke();
             }
         },
+        drawHoverEffect: function () {
+            const {x, y} = gameState.grid.hoveredBlock;
+            if (x !== null && y !== null) {
+                fillHoverBlock(x, y);
+            }
+        },
+        hoveredBlock: {
+            x: null,
+            y: null
+        },
         towers: [],
         tower_lookup: []
     });
@@ -139,7 +182,7 @@ function Mob() {
         move: function (delta_x, delta_y) {
             this.x += this.speed
             this.y += 0
-            if(this.x >= canvas_width) {
+            if (this.x >= canvas_width) {
                 gameState.hp -= this.damage
                 myGameArea.hp.innerText = gameState.hp
                 this.reach_the_end = true
@@ -156,23 +199,23 @@ function Mob() {
 
 class Laser {
     constructor(mob, tower) {
-      this.mob = mob;
-      this.tower = tower;
+        this.mob = mob;
+        this.tower = tower;
     }
 
     draw() {
-      myGameArea.context.beginPath();
-      myGameArea.context.moveTo(this.tower.x, this.tower.y);
-      myGameArea.context.lineTo(this.mob.x, this.mob.y);
-      myGameArea.context.stroke();
-      myGameArea.context.fill();
+        myGameArea.context.beginPath();
+        myGameArea.context.moveTo(this.tower.x, this.tower.y);
+        myGameArea.context.lineTo(this.mob.x, this.mob.y);
+        myGameArea.context.stroke();
+        myGameArea.context.fill();
     }
 
     remove() {
-      // TODO
-      myGameArea.context.beginPath();
+        // TODO
+        myGameArea.context.beginPath();
     }
-};
+}
 
 function Tower(x, y) {
     return {
@@ -183,66 +226,135 @@ function Tower(x, y) {
         cooldown: tower_cooldown,
         ready_to_attack: true,
         check_mob_in_range: function (m) {
-            return (m.x <= this.x + this.range) & (m.x >= this.x - this.range) & (m.y <= this.y + this.range) & (m.y >= this.y - this.range)
+            return (
+                (m.x <= this.x + this.range) &
+                (m.x >= this.x - this.range) &
+                (m.y <= this.y + this.range) &
+                (m.y >= this.y - this.range)
+            );
         },
         get_in_range_mobs: function () {
-            return gameState.mobs.filter(m => this.check_mob_in_range(m)
-            ).sort(function (a, b) {
-                // find the one closest to the end
-                return (b.x - a.x)
-            })
-
+            return gameState.mobs
+                .filter(m => this.check_mob_in_range(m))
+                .sort(function (a, b) {
+                    // find the one closest to the end
+                    return b.x - a.x;
+                });
         },
         attack: function () {
             if (this.ready_to_attack) {
                 // find the mob
-                let in_range_mobs = this.get_in_range_mobs()
+                let in_range_mobs = this.get_in_range_mobs();
                 if (in_range_mobs.length > 0) {
-                    let targeted_mob = in_range_mobs[0]
-                    laser = new Laser(targeted_mob, this)
-                    laser.draw()
-                    targeted_mob.hp -= this.damage
-                    this.ready_to_attack = false
-                    laser.remove()
-                    if(targeted_mob.hp <= 0){
-                        gameState.gold += targeted_mob.worth
-                        myGameArea.gold.innerText = gameState.gold
+                    let targeted_mob = in_range_mobs[0];
+                    laser = new Laser(targeted_mob, this);
+                    laser.draw();
+                    targeted_mob.hp -= this.damage;
+                    laser.remove();
+                    if (targeted_mob.hp <= 0) {
+                        gameState.gold += targeted_mob.worth;
+                        myGameArea.gold.innerText = gameState.gold;
                     }
                     setInterval(() => {
-                        this.ready_to_attack = true
-                    }, this.cooldown)
+                        this.ready_to_attack = true;
+                    }, this.cooldown);
                 }
             }
         },
         draw: function () {
             myGameArea.context.beginPath();
-            myGameArea.context.moveTo(this.x + grid_width / 4, this.y - grid_width * 2 / 5);
-            myGameArea.context.lineTo(this.x - grid_width / 4, this.y - grid_width * 2 / 5);
-            myGameArea.context.lineTo(this.x - grid_width * 2 / 5, this.y + grid_width * 2 / 5);
-            myGameArea.context.lineTo(this.x + grid_width * 2 / 5, this.y + grid_width * 2 / 5);
+            myGameArea.context.moveTo(
+                this.x + grid_width / 4,
+                this.y - (grid_width * 2) / 5
+            );
+            myGameArea.context.lineTo(
+                this.x - grid_width / 4,
+                this.y - (grid_width * 2) / 5
+            );
+            myGameArea.context.lineTo(
+                this.x - (grid_width * 2) / 5,
+                this.y + (grid_width * 2) / 5
+            );
+            myGameArea.context.lineTo(
+                this.x + (grid_width * 2) / 5,
+                this.y + (grid_width * 2) / 5
+            );
             myGameArea.context.fill();
         }
     }
 }
-;
 
 function placeTower(e) {
-    if(gameState.gold < tower_cost) return
+    if (gameState.gold < tower_cost) return;
     const xValue = e.offsetX;
     const yValue = e.offsetY;
-    const x = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
-    const y = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
+    const {x, y} = calculateCoordinate(xValue, yValue);
+    const xTower = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
+    const yTower = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
     const uniqueXY = `${x}${y}`;
-    !gameState.grid.tower_lookup.includes(uniqueXY) ? gameState.grid.tower_lookup.push(uniqueXY) : null;
-    gameState.grid.towers.push(new Tower(x, y))
-    gameState.gold -= tower_cost
-    myGameArea.gold.innerText = gameState.gold
+    !gameState.grid.tower_lookup.includes(uniqueXY)
+        ? gameState.grid.tower_lookup.push(uniqueXY)
+        : null;
+    gameState.grid.towers.push(new Tower(xTower, yTower));
+    gameState.gold -= tower_cost;
+    myGameArea.gold.innerText = gameState.gold;
 
+    finalizeTower();
+}
+
+function fillHoverBlock(x, y) {
+    const {xPosition, yPosition, xPixel, yPixel} = calculateXYPixels(x, y);
+    myGameArea.context.fillRect(xPosition, yPosition, xPixel, yPixel);
+}
+
+function changeColorOnHover(e) {
+    const {x, y} = calculateCoordinate(e.offsetX, e.offsetY);
+    const uniqueXY = `${x}${y}`;
+    gameState.grid.tower_lookup.includes(uniqueXY)
+        ? (gameState.grid.hoveredBlock = {x: null, y: null})
+        : (gameState.grid.hoveredBlock = {x, y});
+}
+
+function setTimeoutResetHover() {
+    // reset needs to be in set time out to override debounce setTimeOut
+    setTimeout(resetHover, 100);
+}
+
+function resetHover() {
+    gameState.grid.hoveredBlock = {x: null, y: null};
+}
+
+function finalizeTower() {
+    // upon "finish building"
+    setTimeoutResetHover();
+
+    const canvas = myGameArea.canvas;
+    canvas.removeEventListener("click", placeTower);
+    canvas.removeEventListener("mouseleave", setTimeoutResetHover);
+    canvas.removeEventListener("mousemove", debounceChangeColorOnHover);
+    canvas.removeEventListener("mouseover", debounceChangeColorOnHover);
+
+    const button = document.getElementById("build-tower-button");
+    button.disabled = false;
+    // const submitButton = document.getElementById("submit-tower");
+    // submitButton.parentNode.removeChild(submitButton);
 }
 
 function addEventListeners() {
-    document.getElementById("build-tower-button").onclick = e => {
+    document.getElementById("build-tower-button").addEventListener("click", e => {
+        const button = e.target;
+        button.disabled = true;
+        // const submitButton = document.createElement("button");
+        // submitButton.innerText = "Start Game";
+        // submitButton.id = "submit-tower";
+        // const buildArea = document
+        //   .getElementById("build_area")
+        //   .appendChild(submitButton);
+        // submitButton.addEventListener("click", finalizeTower);
         const canvas = myGameArea.canvas;
+        canvas.addEventListener("mouseleave", setTimeoutResetHover);
+        canvas.addEventListener("mouseover", debounceChangeColorOnHover);
+        canvas.addEventListener("mousemove", debounceChangeColorOnHover);
         canvas.addEventListener("click", placeTower);
-    };
+    });
 }
