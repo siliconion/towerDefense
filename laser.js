@@ -6,7 +6,11 @@ class Laser {
 
     draw() {
         myGameArea.context.beginPath();
-        var gradient = myGameArea.context.createLinearGradient(0, 0, 200, 0);
+        var gradient = myGameArea.context.createLinearGradient(
+            this.tower.x,
+            this.tower.y,
+            this.mob.x,
+            this.mob.y);
         gradient.addColorStop(.2, 'red');
         gradient.addColorStop(.4, 'orange');
         gradient.addColorStop(.6, 'yellow');
