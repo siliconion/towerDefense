@@ -131,28 +131,6 @@ function spawn() {
     }
 }
 
-
-class Laser {
-    constructor(mob, tower) {
-        this.mob = mob;
-        this.tower = tower;
-    }
-
-    draw() {
-        myGameArea.context.beginPath();
-        myGameArea.context.moveTo(this.tower.x, this.tower.y);
-        myGameArea.context.lineTo(this.mob.x, this.mob.y);
-        myGameArea.context.stroke();
-        myGameArea.context.fill();
-    }
-
-    remove() {
-        // TODO
-        myGameArea.context.beginPath();
-    }
-}
-
-
 function placeTower(e) {
     if (gameState.gold < tower_cost) return;
     const xValue = e.offsetX;
