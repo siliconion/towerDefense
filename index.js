@@ -16,6 +16,7 @@ const start_hp = 100
 const tower_damage = 1
 const tower_range = canvas_width * 3
 const tower_cooldown = 1000
+const tower_cost = 40
 
 
 // global variables
@@ -28,6 +29,8 @@ window.onload = function () {
 
 let myGameArea = {
     canvas: document.createElement("canvas"),
+    gold: document.getElementById("gold"),
+    hp: document.getElementById("hp"),
     start: function () {
         this.canvas.width = canvas_width;
         this.canvas.height = canvas_width;
@@ -134,6 +137,7 @@ function Mob() {
             if(this.x >= canvas_width) {
                 console.log("mob attack!", gameState.hp)
                 gameState.hp -= this.damage
+                myGameArea.hp.innerText = gameState.hp
                 this.reach_the_end = true
             }
         },
@@ -174,6 +178,7 @@ function Tower(x, y) {
                     targeted_mob.hp -= this.damage
                     if(targeted_mob.hp <= 0){
                         gameState.gold += targeted_mob.worth
+                        myGameArea.gold.innerText = gameState.gold
                     }
                     setInterval(() => {
                         this.ready_to_attack = true
@@ -194,22 +199,22 @@ function Tower(x, y) {
 ;
 
 function placeTower(e) {
+    if(gameState.gold < tower_cost) return
     const xValue = e.offsetX;
     const yValue = e.offsetY;
     const x = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
     const y = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
     const uniqueXY = `${x}${y}`;
     !gameState.grid.tower_lookup.includes(uniqueXY) ? gameState.grid.tower_lookup.push(uniqueXY) : null;
-    console.log("building tower at", x, y)
     gameState.grid.towers.push(new Tower(x, y))
+    gameState.gold -= tower_cost
+    myGameArea.gold.innerText = gameState.gold
+
 }
 
 function addEventListeners() {
     document.getElementById("build-tower-button").onclick = e => {
         const canvas = myGameArea.canvas;
-        // canvas.style.backgroundColor = "grey";
-        console.log(gameState);
-        console.log(gameState.gi);
         canvas.addEventListener("click", placeTower);
     };
 }
