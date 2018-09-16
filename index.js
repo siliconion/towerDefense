@@ -150,6 +150,26 @@ function Mob() {
     }
 };
 
+class Laser {
+    constructor(mob, tower) {
+      this.mob = mob;
+      this.tower = tower;
+    }
+
+    draw() {
+      myGameArea.context.beginPath();
+      myGameArea.context.moveTo(this.tower.x, this.tower.y);
+      myGameArea.context.lineTo(this.mob.x, this.mob.y);
+      myGameArea.context.stroke();
+      myGameArea.context.fill();
+    }
+
+    remove() {
+      // TODO
+      myGameArea.context.beginPath();
+    }
+};
+
 function Tower(x, y) {
     return {
         x: x,
@@ -175,7 +195,10 @@ function Tower(x, y) {
                 let in_range_mobs = this.get_in_range_mobs()
                 if (in_range_mobs.length > 0) {
                     let targeted_mob = in_range_mobs[0]
+                    laser = new Laser(targeted_mob, this)
+                    laser.draw()
                     targeted_mob.hp -= this.damage
+                    laser.remove()
                     if(targeted_mob.hp <= 0){
                         gameState.gold += targeted_mob.worth
                         myGameArea.gold.innerText = gameState.gold
