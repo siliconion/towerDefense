@@ -44,20 +44,16 @@ let myGameArea = {
 let tempTowerRecord = [];
 
 function calculateXYPixels(x, y) {
-  // These sets of width height and num might want to be moved to outside....
-  const width = myGameArea.canvas.width;
-  const height = myGameArea.canvas.height;
-  // this is currently hardcoded as
-  const num_x = window.gameState.grid.num_x;
-  const num_y = window.gameState.grid.num_y;
+  const xPosition = x * grid_width;
+  const yPosition = y * grid_width;
 
-  const xPixel = width / num_x;
-  const yPixel = height / num_y;
+  return { xPosition, yPosition, xPixel: grid_width, yPixel: grid_width };
+}
 
-  const xPosition = x * xPixel;
-  const yPosition = y * yPixel;
-
-  return { xPosition, yPosition, xPixel, yPixel };
+function calculateCoordinate(offsetX, offsetY) {
+  const x = Math.floor(offsetX / grid_width);
+  const y = Math.floor(offsetY / grid_width);
+  return { x, y };
 }
 // const debounceChangeColorOnHover = changeColorOnHover;
 const debounceChangeColorOnHover = debounce(100, changeColorOnHover);
@@ -157,28 +153,19 @@ function Grid() {
       }
     },
     drawHoverEffect: function() {
-      const { current, prev } = window.gameState.grid.hoveredBlock;
-      const currentX = current.x;
-      const currentY = current.y;
-      const prevX = prev.x;
-      const prevY = prev.y;
+      const { x, y } = gameState.grid.hoveredBlock;
+      // const currentX = current.x;
+      // const currentY = current.y;
+      // const prevX = prev.x;
+      // const prevY = prev.y;
 
-      if (currentX !== null && currentY !== null) {
-        fillHoverBlock(currentX, currentY);
-      }
-      if (prevX !== null && prevY !== null) {
-        cleanHoverBlock(prevX, prevY);
+      if (x !== null && y !== null) {
+        fillHoverBlock(x, y);
       }
     },
     hoveredBlock: {
-      current: {
-        x: null,
-        y: null
-      },
-      prev: {
-        x: null,
-        y: null
-      }
+      x: null,
+      y: null
     },
     towers: [],
     tower_lookup: []
@@ -190,10 +177,10 @@ function fillHoverBlock(x, y) {
   myGameArea.context.fillRect(xPosition, yPosition, xPixel, yPixel);
 }
 
-function cleanHoverBlock(x, y) {
-  const { xPosition, yPosition, xPixel, yPixel } = calculateXYPixels(x, y);
-  myGameArea.context.clearRect(xPosition, yPosition, xPixel, yPixel);
-}
+// function cleanHoverBlock(x, y) {
+//   const { xPosition, yPosition, xPixel, yPixel } = calculateXYPixels(x, y);
+//   myGameArea.context.clearRect(xPosition, yPosition, xPixel, yPixel);
+// }
 
 function Mob() {
   return {
@@ -291,25 +278,26 @@ function placeTower(e) {
   if (gameState.gold < tower_cost) return;
   const xValue = e.offsetX;
   const yValue = e.offsetY;
-  const x = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
-  const y = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
+  const { x, y } = calculateCoordinate(xValue, yValue);
+  const xTower = Math.floor(xValue / grid_width) * grid_width + grid_width / 2;
+  const yTower = Math.floor(yValue / grid_width) * grid_width + grid_width / 2;
+  // console.log(x, y, "?");
   const uniqueXY = `${x}${y}`;
   !gameState.grid.tower_lookup.includes(uniqueXY)
     ? gameState.grid.tower_lookup.push(uniqueXY)
     : null;
-  gameState.grid.towers.push(new Tower(x, y));
+
+  gameState.grid.towers.push(new Tower(xTower, yTower));
   gameState.gold -= tower_cost;
   myGameArea.gold.innerText = gameState.gold;
 }
 
 function changeColorOnHover(e) {
-  const { hoveredBlock } = window.gameState.grid;
-  const { current } = hoveredBlock;
   const { x, y } = calculateCoordinate(e.offsetX, e.offsetY);
-  if (current.x && current.y) {
-    hoveredBlock.prev = current;
-  }
-  hoveredBlock.current = { x, y };
+  const uniqueXY = `${x}${y}`;
+  gameState.grid.tower_lookup.includes(uniqueXY)
+    ? (gameState.grid.hoveredBlock = { x: null, y: null })
+    : (gameState.grid.hoveredBlock = { x, y });
 }
 
 function setTimeoutResetHover() {
@@ -317,36 +305,14 @@ function setTimeoutResetHover() {
   setTimeout(resetHover, 100);
 }
 
-function calculateCoordinate(offsetX, offsetY) {
-  const width = myGameArea.canvas.width;
-  const height = myGameArea.canvas.height;
-  // this is currently hardcoded as
-  const num_x = window.gameState.grid.num_x;
-  const num_y = window.gameState.grid.num_y;
-
-  const xPixel = width / num_x;
-  const yPixel = height / num_y;
-
-  const x = Math.floor(offsetX / xPixel);
-  const y = Math.floor(offsetY / yPixel);
-  return { x, y };
-}
-
 function resetHover() {
-  const { x, y } = gameState.grid.hoveredBlock.current;
-  const prevX = gameState.grid.hoveredBlock.prev.x;
-  const prevY = gameState.grid.hoveredBlock.prev.y;
-  cleanHoverBlock(x, y);
-  cleanHoverBlock(prevX, prevY);
-  window.gameState.grid.hoveredBlock.current.x = null;
-  window.gameState.grid.hoveredBlock.current.y = null;
-  window.gameState.grid.hoveredBlock.prev.x = null;
-  window.gameState.grid.hoveredBlock.prev.y = null;
+  gameState.grid.hoveredBlock.x = null;
+  gameState.grid.hoveredBlock.y = null;
 }
 
 function finalizeTower() {
   // upon "finish building"
-  const canvas = window.myGameArea.canvas;
+  const canvas = myGameArea.canvas;
   canvas.removeEventListener("mousemove", debounceChangeColorOnHover);
   canvas.removeEventListener("click", placeTower);
   canvas.removeEventListener("mouseleave", setTimeoutResetHover);
@@ -361,18 +327,18 @@ function finalizeTower() {
 
 function addEventListeners() {
   document.getElementById("build-tower-button").addEventListener("click", e => {
-    const canvas = this.myGameArea.canvas;
     const button = e.target;
     button.disabled = true;
 
     const submitButton = document.createElement("button");
-    submitButton.innerText = "Submit Tower";
+    submitButton.innerText = "Start Game";
     submitButton.id = "submit-tower";
     const buildArea = document
       .getElementById("build_area")
       .appendChild(submitButton);
     submitButton.addEventListener("click", finalizeTower);
 
+    const canvas = myGameArea.canvas;
     canvas.style.backgroundColor = "grey";
     canvas.addEventListener("mouseleave", setTimeoutResetHover);
     canvas.addEventListener("mouseover", debounceChangeColorOnHover);
