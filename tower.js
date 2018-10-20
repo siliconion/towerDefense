@@ -1,22 +1,23 @@
-
 function Tower(x, y) {
     return {
         x: x,
         y: y,
-        damage: tower_damage,
-        range: tower_range,
-        cooldown: tower_cooldown,
+        x_px: ( x + 0.5) * gridWidth,
+        y_px: ( y + 0.5) * gridWidth,
+        damage: towerDamage,
+        range: towerRange,
+        cooldown: towerCooldown,
         ready_to_attack: true,
         check_mob_in_range: function (m) {
             return (
-                (m.x <= this.x + this.range) &
-                (m.x >= this.x - this.range) &
-                (m.y <= this.y + this.range) &
-                (m.y >= this.y - this.range)
+                (m.x_px <= this.x_px + this.range) &
+                (m.x_px >= this.x_px - this.range) &
+                (m.y_px <= this.y_px + this.range) &
+                (m.y_px >= this.y_px - this.range)
             );
         },
         get_in_range_mobs: function () {
-            return gameState.mobs
+            return game.mobs
                 .filter(m => this.check_mob_in_range(m))
                 .sort(function (a, b) {
                     // find the one closest to the end
@@ -32,11 +33,12 @@ function Tower(x, y) {
             if (this.ready_to_attack) {
                 // find the mob
                 let in_range_mobs = this.get_in_range_mobs();
+
                 if (in_range_mobs.length > 0) {
                     let targeted_mob = in_range_mobs[0];
                     laser = new Laser(targeted_mob, this);
                     laser.draw();
-                    targeted_mob.hp -= this.damage;
+                    targeted_mob.getDamage(this.damage)
                     setTimeout(laser.remove, 300);
                     this.ready_to_attack = false;
                     this.recharge();
@@ -44,53 +46,56 @@ function Tower(x, y) {
             }
         },
         draw: function () {
-            myGameArea.context.beginPath();
-            myGameArea.context.moveTo(
-                this.x + grid_width / 4,
-                this.y - (grid_width * 2) / 5
+            // draw tower itself
+            ctx.strokeStyle = "#2211ff"
+            ctx.beginPath();
+            ctx.moveTo(
+                this.x_px + gridWidth / 4,
+                this.y_px - (gridWidth * 2) / 5
             );
-            myGameArea.context.lineTo(
-                this.x - grid_width / 4,
-                this.y - (grid_width * 2) / 5
+            ctx.lineTo(
+                this.x_px - gridWidth / 4,
+                this.y_px - (gridWidth * 2) / 5
             );
-            myGameArea.context.lineTo(
-                this.x - (grid_width * 2) / 5,
-                this.y + (grid_width * 2) / 5
+            ctx.lineTo(
+                this.x_px - (gridWidth * 2) / 5,
+                this.y_px + (gridWidth * 2) / 5
             );
-            myGameArea.context.lineTo(
-                this.x + (grid_width * 2) / 5,
-                this.y + (grid_width * 2) / 5
+            ctx.lineTo(
+                this.x_px + (gridWidth * 2) / 5,
+                this.y_px + (gridWidth * 2) / 5
             );
-            myGameArea.context.fillStyle = "#2211ff"
-            myGameArea.context.fill();
+            ctx.fillStyle = "#2211ff"
+            ctx.fill();
+            // draw laser
+            // move draw laser here
         }
     };
 }
-//
-// function rainbow() {
-//     let colors = ['red', 'orange', 'yellow', 'green', 'blue', 'violet']
-//     return colors[Math.floor(Math.random() * 7)]
-// }
-//
-// class Laser {
-//     constructor(mob, tower) {
-//         this.mob = mob;
-//         this.tower = tower;
-//     }
-//
-//     draw() {
-//         myGameArea.context.beginPath();
-//         myGameArea.context.moveTo(this.tower.x, this.tower.y);
-//         myGameArea.context.lineTo(this.mob.x, this.mob.y);
-//         myGameArea.context.lineWidth = 5;
-//         myGameArea.context.strokeStyle= rainbow()
-//         myGameArea.context.stroke();
-//         myGameArea.context.lineWidth = 1;
-//         myGameArea.context.fill();
-//     }
-//
-//     remove() {
-//         // TODO
-//         myGameArea.context.beginPath();
-//     }
-// }
+
+class Laser {
+    constructor(mob, tower) {
+        this.mob = mob;
+        this.tower = tower;
+    }
+
+    draw() {
+        ctx.beginPath();
+        var gradient = ctx.createLinearGradient(
+            this.tower.x_px,
+            this.tower.y_px,
+            this.mob.x_px,
+            this.mob.y_px);
+        gradient.addColorStop(.2, 'red');
+        gradient.addColorStop(.4, 'orange');
+        gradient.addColorStop(.6, 'yellow');
+        gradient.addColorStop(0.8, 'green');
+        gradient.addColorStop(1, 'blue');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 5;
+        ctx.moveTo(this.mob.x_px, this.mob.y_px);
+        ctx.lineTo(this.tower.x_px, this.tower.y_px);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+    }
+}

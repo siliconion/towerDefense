@@ -1,35 +1,38 @@
 function Mob() {
     return {
-        hp: mob_init_hp + gameState.level * 3,
-        speed: mob_speed,
-        damage: mob_damage,
-        x: mob_init_position_x,
-        y: Math.random() * 500,
-        size: mob_size,
-        worth: mob_worth,
+        hp: mobInitHp + game.level * 3,
+        speed: mobSpeed,
+        damage: mobDamage,
+        x_px: mobInitPositionX,
+        y_px: Math.random() * 500,
+        size: mobSize,
+        worth: mobWorth,
         reach_the_end: false,
         die: function () {
             if (this.hp <= 0) {
-                gameState.gold += this.worth;
-                myGameArea.gold.innerText = gameState.gold;
+                game.gold += this.worth;
+                game.gold.innerText = game.gold;
             }
         },
-        move: function (delta_x, delta_y) {
-            this.x += this.speed;
-            this.y += 0;
-            if (this.x >= canvas_width) {
-                console.log("mob attack!", gameState.hp);
-                gameState.hp -= this.damage;
-                myGameArea.hp.innerText = gameState.hp;
+        move: function () {
+            this.x_px += this.speed;
+            this.y_px += 0;
+            if (this.x_px >= canvasWidth) {
+                game.hp -= this.damage;
+                hpElement.innerText = game.hp;
                 this.reach_the_end = true;
             }
         },
+        getDamage: function (damage) {
+            this.hp -= damage
+            hpElement.innerText = this.hp
+        },
         draw: function () {
-            myGameArea.context.beginPath();
-            myGameArea.context.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-            myGameArea.context.stroke();
-            myGameArea.context.fillStyle = "#F44444"
-            myGameArea.context.fill();
+            ctx.beginPath();
+            ctx.arc(this.x_px, this.y_px, this.size, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = "#F44444"
+            ctx.fill();
         }
     };
 }
