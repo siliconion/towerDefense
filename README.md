@@ -36,16 +36,16 @@ Games are like movie films, consisting of still pictures shown consecutively. Th
 
 The game loop in in `index.js`.
 
-####### render
+###### render
 `render` simply draws all components.
 
-####### process user input
+###### process user input
 `processInput` deals with user inputs. In this game, user can only build a tower. User input uses the [state pattern](http://gameprogrammingpatterns.com/state.html), and for this game, user can be one of the 3 states: 
 * `idle` 
 * `building`: user clicked the button to build a tower, but hasn't decide where to build.
 * `built`: user that in the building state, chose a valid place on the grid to build. The game loop will build the tower, and the user state will go back to idle.
 
-####### update the game status
+###### update the game status
  `update` calls the components in the games to do their actions. Towers will attach the mobs, and mobs will move. 
 
 
