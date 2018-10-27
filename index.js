@@ -27,8 +27,6 @@ let ctx = canvas.getContext("2d");
 let goldElement = document.getElementById("gold");
 let hpElement = document.getElementById("hp");
 let levelElement = document.getElementById("level");
-let mouseX = -1;
-let mouseY = -1
 
 function render() {
 
@@ -77,7 +75,9 @@ let game = {
     mobs: [],
     spawnMob: true,
     spawn_countdown: null,
-    userInputState: 'idle'
+    userInputState: 'idle',
+    mouseX: -1,
+    mouseY: -1,
 }
 
 function initGame() {
@@ -87,7 +87,7 @@ function initGame() {
     game.mobs = [];
     game.grid = new Grid(gridNumber);
     // game.timer = new Timer();
-    game.spawnMob = true
+    game.spawnMob = true;
     runGame();
 }
 

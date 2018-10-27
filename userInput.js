@@ -9,9 +9,17 @@ function buildingTower() {
 }
 
 function trackingMouse(e) {
-    let coordinate = calculateCoordinate(e.offsetX, e.offsetY);
-    mouseX = coordinate[0]
-    mouseY = coordinate[1]
+    const mousePos = getMousePos(canvas, e);    
+    game.mouseX = mousePos.x;
+    game.mouseY = mousePos.y;
+}
+
+function getMousePos(canvas, e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
 }
 
 function buildTower(e) {
@@ -25,8 +33,8 @@ function buildTower(e) {
         game.gold -= towerCost
         goldElement.innerText = game.gold
         game.userInputState = 'built'
-        canvas.removeEventListener("mousemove", buildingTower)
-        canvas.removeEventListener("click", buildTower)
+        canvas.removeEventListener("mousemove", buildingTower, true);
+        canvas.removeEventListener("click", buildTower, true);
     }
 }
 
