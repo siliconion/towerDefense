@@ -11,15 +11,16 @@ function Grid(grid_number) {
         },
         drawTile: function (tower, xi, yi) {
             // draw the grid
-            ctx.fillStyle = "#DCE4EC"
             ctx.lineWidth = "2";
             ctx.strokeStyle = "red";
+            ctx.fillStyle = "#DCE4EC";
             ctx.rect(xi * gridWidth, yi * gridWidth, gridWidth, gridWidth);
+            if (game.userInputState == 'building' && mouseInRect(game.mouseX, game.mouseY, xi, yi)) {
+                ctx.fillStyle = "#FF6A6A";
+                let highlight_coords = calcCoords(game.mouseX, game.mouseY);
+                ctx.fillRect(highlight_coords[0], highlight_coords[1], gridWidth, gridWidth);
+            }
             ctx.stroke();
-            // if (game.userInputState == 'building' && mouseX == xi && mouseY == yi) {
-            //     ctx.fillStyle = "#FF6A6A";
-            //     ctx.fill();
-            // }
             // draw the tower
             if (tower != null) {
                 tower.draw()
@@ -27,4 +28,16 @@ function Grid(grid_number) {
         }
     }
     return grid
+}
+
+function mouseInRect(x, y, xi, yi) {
+    const mouse_in_x = (x >= xi * gridWidth) && (x < (xi + 1) * gridWidth);
+    const mouse_in_y = (y >= yi * gridWidth) && (y < (yi + 1) * gridWidth);
+    return mouse_in_x && mouse_in_y
+}
+
+function calcCoords(offsetX, offsetY) {
+    const x = Math.floor(offsetX / gridWidth) * gridWidth;
+    const y = Math.floor(offsetY / gridWidth) * gridWidth;
+    return [x, y];
 }
